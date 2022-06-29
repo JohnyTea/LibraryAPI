@@ -12,7 +12,7 @@ namespace Library.UnitTest
             var options = new DbContextOptionsBuilder<ApplicationDataBaseContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            var _context = new ApplicationDataBaseContext(options);
+            _context = new ApplicationDataBaseContext(options);
             _context.Database.EnsureCreated();
 
             ApplicationDataBaseInitializer.Initialize(_context);

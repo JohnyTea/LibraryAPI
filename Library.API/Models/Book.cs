@@ -15,7 +15,7 @@ public class Book
 
     public string? Publisher { get; set; }
 
-    public int Year { get; set; }
+    public int? Year { get; set; }
 
     [Required]
     public string ISBN { get; set; }

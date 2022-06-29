@@ -1,4 +1,5 @@
 ﻿using Library.API.Data;
+using Library.API.Models;
 
 namespace Library.API.Controllers;
 
@@ -14,34 +15,37 @@ public class BooksController : ControllerBase
     }
 
     [HttpGet]
-    public IEnumerable<string> Get()
+    public IEnumerable<Book> Get()
     {
-        return new string[] { "value1", "value2" };
+        throw new NotImplementedException();
     }
 
        
     [HttpGet("{id}")]
-    public string Get(int id)
+    public Book Get(int id)
     {
-        return "value";
+        throw new NotImplementedException();
     }
 
         
     [HttpPost]
-    public void Post([FromBody] string value)
+    public int Post([FromBody] Book newBook)
     {
+        throw new NotImplementedException();
     }
 
         
     [HttpPut("{id}")]
-    public void Put(int id, [FromBody] string value)
+    public void Put(int id, [FromBody] Book updatedBook)
     {
+        throw new NotImplementedException();
     }
 
         
     [HttpDelete("{id}")]
     public void Delete(int id)
     {
+        throw new NotImplementedException();
     }
 }
 
