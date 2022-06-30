@@ -1,7 +1,7 @@
 ﻿using Library.API.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Library.UnitTest
+namespace Library.UnitTest.Mocks
 {
     public class TestBase : IDisposable
     {

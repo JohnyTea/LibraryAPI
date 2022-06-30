@@ -1,7 +1,7 @@
 ﻿using Library.API.Data;
 using Library.API.Models;
 
-namespace Library.UnitTest
+namespace Library.UnitTest.Mocks
 {
     internal class ApplicationDataBaseInitializer
     {

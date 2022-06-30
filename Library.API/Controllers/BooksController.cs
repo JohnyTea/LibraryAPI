@@ -36,7 +36,7 @@ public class BooksController : ControllerBase
 
         
     [HttpPut("{id}")]
-    public void Put(int id, [FromBody] Book updatedBook)
+    public void Put([FromBody] Book updatedBook)
     {
         throw new NotImplementedException();
     }
