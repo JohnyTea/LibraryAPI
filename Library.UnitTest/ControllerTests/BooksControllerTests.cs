@@ -1,4 +1,5 @@
 ﻿using Library.API.Controllers;
+using Library.API.Data;
 using Library.API.Models;
 using Library.UnitTest.Mocks;
 
@@ -8,25 +9,25 @@ namespace Library.UnitTest.ControllerTests
     {
     #region Get
         [Fact]
-        public void GetShouldReturnAllBooks()
+        public async void GetShouldReturnAllBooks()
         {
 
             var controller = new BooksController(_context);
 
-            var result = controller.Get();
+            var result = (await controller.Get()).Value;
 
-            Assert.Equal(6, result.Count());
+            Assert.Equal(_context.Books.Count(), result.Count());
 
         }
 
         [Theory]
         [InlineData(2)]
         [InlineData(5)]
-        public void GetShouldReturnBook(int ID)
+        public async void GetShouldReturnBook(int ID)
         {
             var controller = new BooksController(_context);
 
-            var result = controller.Get(ID);
+            var result = (await controller.Get(ID)).Value;
 
             Assert.NotNull(result);
             Assert.Equal(result.Id, ID);
@@ -40,11 +41,11 @@ namespace Library.UnitTest.ControllerTests
         [InlineData(2345)]
         [InlineData(-1263)]
         [InlineData(-1)]
-        public void GetShouldReturnNull(int ID)
+        public async void GetShouldReturnNull(int ID)
         {
             var controller = new BooksController(_context);
 
-            var result = controller.Get(ID);
+            var result = (await controller.Get(ID)).Value;
 
             Assert.Null(result);
         }
@@ -57,13 +58,12 @@ namespace Library.UnitTest.ControllerTests
         [InlineData(1000, "Przedwiośnie", null, "Nowa Era", 1924, "9781429498876")]
         [InlineData(1000, "Przedwiośnie", "Stefan Żeromski", null, 1924, "9781429498876")]
         [InlineData(1000, "Przedwiośnie", "Stefan Żeromski", "Nowa Era", 0, "9781429498876")]
-        public void PostShouldAddBook(int id, string title, string author, string publisher, int year, string isbn)
+        public async void PostShouldAddBook(int id, string title, string author, string publisher, int year, string isbn)
         {
             BooksController controller = new(_context);
             int bookCountBeforePost = _context.Books.Count();
-            Book newBook = new()
+            BookDto newBook = new()
             {
-                Id = id,
                 Author = author,
                 Publisher = publisher,
                 ISBN = isbn,
@@ -71,47 +71,40 @@ namespace Library.UnitTest.ControllerTests
                 Year = year
             };
 
-            controller.Post(newBook);
+            var result = (await controller.Post(newBook));
+
             int bookCountAfterPost = _context.Books.Count();
 
-            Assert.Equal(bookCountBeforePost+1, bookCountAfterPost);
+            Assert.Equal(bookCountBeforePost + 1, bookCountAfterPost);
+            Assert.NotNull(result);
+            /*
+            Assert.Equal(title, result.Title);
+            Assert.Equal(author, result.Author);
+            Assert.Equal(publisher, result.Publisher);
+            Assert.Equal(year, result.Year);
+            Assert.Equal(isbn, result.ISBN);
+            */
         }
 
         [Fact]
-        public void PostShouldAddExistingBook()
+        public async void PostShouldAddExistingBook()
         {
             Book bookToPost = _context.Books.First();
             bookToPost.Id = 0;
             BooksController controller = new(_context);
             int bookCountBeforePost = _context.Books.Count();
 
-            controller.Post(bookToPost);
+            var result = (await controller.Post(bookToPost)).Value;
+
             int bookCountAfterPost = _context.Books.Count();
 
             Assert.Equal(bookCountBeforePost + 1, bookCountAfterPost);
-        }
-
-        [Theory]
-        [InlineData("Dziady", "Adam Mickiewicz", "Nowa Era", 1926, "978142949887")]
-        [InlineData("Dziady", "Adam Mickiewicz", "Nowa Era", 1926, "97814294988765")]
-        public void PostShouldNotAddBook(string title, string author, string publisher, int year, string isbn)
-        {
-            int bookCountBeforePost = _context.Books.Count();
-            var controller = new BooksController(_context);
-            Book newBook = new()
-            {
-                Author = author,
-                Publisher = publisher,
-                ISBN = isbn,
-                Title = title,
-                Year = year
-            };
-
-
-            controller.Post(newBook);
-            int bookCountAfterPost = _context.Books.Count();
-
-            Assert.Equal(bookCountBeforePost, bookCountAfterPost);
+            Assert.NotNull(result);
+            Assert.Equal(bookToPost.Title, result.Title);
+            Assert.Equal(bookToPost.Author, result.Author);
+            Assert.Equal(bookToPost.Publisher, result.Publisher);
+            Assert.Equal(bookToPost.Year, result.Year);
+            Assert.Equal(bookToPost.ISBN, result.ISBN);
         }
 
         #endregion
@@ -123,7 +116,7 @@ namespace Library.UnitTest.ControllerTests
         [InlineData(2, "Dziady", null, "Nowa Era", 1924, "9781429498876")]
         [InlineData(2, "Dziady", "Adam Mickiewicz", null, 1924, "9781429498876")]
         [InlineData(2, "Dziady", "Adam Mickiewicz", "Nowa Era", 0, "9781429498876")]
-        public void PutShouldUpdateBook(int id, string title, string author, string publisher, int year, string isbn)
+        public async void PutShouldUpdateBook(int id, string title, string author, string publisher, int year, string isbn)
         {
             BooksController controller = new(_context);
             int booksCountBeforePut = _context.Books.Count();
@@ -136,26 +129,28 @@ namespace Library.UnitTest.ControllerTests
                 Year = year
             };
 
-            controller.Put(id, updatedBook);
+            await controller.Put(id, updatedBook);
+
             int booksCountAfterPut = _context.Books.Count();
 
-            Assert.Equal(booksCountBeforePut, booksCountAfterPut);
-
             var addedBook = _context.Books.Where((book) => book.Id == id);
+            Assert.Equal(booksCountBeforePut, booksCountAfterPut);
             Assert.NotNull(addedBook);
             Assert.Equal(1, addedBook.Count());
             Assert.StrictEqual(updatedBook, addedBook.First());
         }
 
         [Theory]
-        [InlineData(7, "Przedwiośnie", "Stefan Żeromski", "Nowa Era", 1924, "9781429498876")]
-        [InlineData(7, "Dziady", null, "Nowa Era", 1924, "9781429498876")]
-        [InlineData(7, "Dziady", "Adam Mickiewicz", null, 1924, "9781429498876")]
-        [InlineData(7, "Dziady", "Adam Mickiewicz", "Nowa Era", 0, "9781429498876")]
-        public void PutShouldAddBook(int id, string title, string author, string publisher, int year, string isbn)
+        [InlineData(7, 0, "Przedwiośnie", "Stefan Żeromski", "Nowa Era", 1924, "9781429498876")]
+        [InlineData(7, 0, "Dziady", null, "Nowa Era", 1924, "9781429498876")]
+        [InlineData(7, 0, "Dziady", "Adam Mickiewicz", null, 1924, "9781429498876")]
+        [InlineData(7, 0, "Dziady", "Adam Mickiewicz", "Nowa Era", 0, "9781429498876")]
+        [InlineData(7, 7, "Dziady", "Adam Mickiewicz", "Nowa Era", 0, "9781429498876")]
+        public async void PutShouldAddBook(int id, int bookID, string title, string author, string publisher, int year, string isbn)
         {
             Book newBook = new()
             {
+                Id = bookID,
                 Author = author,
                 Publisher = publisher,
                 ISBN = isbn,
@@ -166,64 +161,14 @@ namespace Library.UnitTest.ControllerTests
             BooksController controller = new(_context);
             int booksCountBeforePut = _context.Books.Count();
 
-            controller.Put(id, newBook);
+            await controller.Put(id, newBook);
             int booksCountAfterPut = _context.Books.Count();
 
-            Assert.Equal(booksCountBeforePut + 1, booksCountAfterPut);
-
             var addedBook = _context.Books.Where((book) => book.Id == id);
+            Assert.Equal(booksCountBeforePut + 1, booksCountAfterPut);
             Assert.NotNull(addedBook);
             Assert.Equal(1, addedBook.Count());
             Assert.StrictEqual(newBook, addedBook.First());
-        }
-
-        [Theory]
-        [InlineData(2, "Dziady", "Adam Mickiewicz", "Nowa Era", 1926, "978142949887")]
-        [InlineData(2, "Dziady", "Adam Mickiewicz", "Nowa Era", 1926, "97814294988765")]
-        public void PutShouldFailToUpdateBook(int id, string title, string author, string publisher, int year, string isbn)
-        {
-            Book incorectBook = new()
-            {
-                Author = author,
-                Publisher = publisher,
-                ISBN = isbn,
-                Title = title,
-                Year = year
-            };
-            int booksCountBeforePut = _context.Books.Count();
-            var controller = new BooksController(_context);
-            Book correctBookBeforePut = _context.Books.First((book) => book.Id == id);
-
-            controller.Put(id, incorectBook);
-
-            int booksCountAfterPut = _context.Books.Count();
-            Assert.Equal(booksCountBeforePut, booksCountAfterPut);
-            var correctBookAfterPut = _context.Books.Where((book) => book.Id == id);
-            Assert.NotNull(correctBookAfterPut);
-            Assert.Equal(1, correctBookAfterPut.Count());
-            Assert.StrictEqual(correctBookBeforePut, correctBookAfterPut.FirstOrDefault());
-        }
-
-        [Theory]
-        [InlineData(7, "Dziady", "Adam Mickiewicz", "Nowa Era", 1926, "978142949887")]
-        [InlineData(7, "Dziady", "Adam Mickiewicz", "Nowa Era", 1926, "97814294988765")]
-        public void PutShouldFailToAddBook(int id, string title, string author, string publisher, int year, string isbn)
-        {
-            Book incorectBook = new()
-            {
-                Author = author,
-                Publisher = publisher,
-                ISBN = isbn,
-                Title = title,
-                Year = year
-            };
-            int booksCountBeforePut = _context.Books.Count();
-            var controller = new BooksController(_context);
-
-            controller.Put(id, incorectBook);
-
-            int booksCountAfterPut = _context.Books.Count();
-            Assert.Equal(booksCountBeforePut, booksCountAfterPut);
         }
 
         #endregion
@@ -232,12 +177,12 @@ namespace Library.UnitTest.ControllerTests
         [Theory]
         [InlineData(2)]
         [InlineData(4)]
-        public void DeleteShouldDeleteBook(int id)
+        public async void DeleteShouldDeleteBook(int id)
         {
             int oldBooksCount = _context.Books.Count();
             var controller = new BooksController(_context);
 
-            controller.Delete(id);
+            await controller.Delete(id);
 
             int newBooksCount = _context.Books.Count();
             Assert.Equal(oldBooksCount-1, newBooksCount);
@@ -248,12 +193,12 @@ namespace Library.UnitTest.ControllerTests
         [Theory]
         [InlineData(-1)]
         [InlineData(132)]
-        public void DeleteShouldNotDeleteBook(int id)
+        public async void DeleteShouldNotDeleteBook(int id)
         {
             int oldBooksCount = _context.Books.Count();
             var controller = new BooksController(_context);
 
-            controller.Delete(id);
+            await controller.Delete(id);
 
             int newBooksCount = _context.Books.Count();
             Assert.Equal(oldBooksCount, newBooksCount);

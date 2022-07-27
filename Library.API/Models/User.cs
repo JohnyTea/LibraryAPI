@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Library.API.Models;
 
@@ -11,7 +12,10 @@ public class User
     public string? UserName { get; set; }
 
     [Required]
-    public DateOnly BirthDate { get; set; }
+    public DateTime BirthDate { get; set; }
+
+    [JsonIgnore]
+    public List<Book> Books { get; set; }
 
 }
 

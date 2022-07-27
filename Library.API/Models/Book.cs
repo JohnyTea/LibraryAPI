@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-
+using System.Text.Json.Serialization;
 
 namespace Library.API.Models;
 
@@ -24,6 +24,30 @@ public class Book
     [MinLength(13)]
     [MaxLength(13)]
     public string ISBN { get; set; }
+
+    public int? BorrowerID { get; set; }
+
+    [JsonIgnore]
+    public User Borrower { get; private set; }
+
+
+    public void SetBorrower(User borrower)
+    {
+        if (Borrower is not null) return; //TODO throw custom exception "Book is already borrowed"
+
+        BorrowerID = borrower.Id;
+        Borrower = borrower;
+        borrower.Books.Add(this);
+    }
+
+    public void RemoveBorrower()
+    {
+        if (Borrower is null) return;
+
+        Borrower.Books.Remove(this);
+        BorrowerID = null;
+        Borrower = null;
+    }
 
     public override bool Equals(object? obj)
     {

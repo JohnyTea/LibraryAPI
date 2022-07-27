@@ -1,92 +1,148 @@
 ﻿using Library.API.Data;
 using Library.API.Models;
+using Library.API.Services;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace Library.API.Controllers;
 
-[Route("books")]
+[Route("api/[controller]")]
 [ApiController]
 public class BooksController : ControllerBase
 {
-    private readonly ApplicationDataBaseContext _db;
+    private readonly ApplicationDataBaseContext _context;
+    private readonly ILibraryService _library;
 
-    public BooksController(ApplicationDataBaseContext db)
+
+    public BooksController(ApplicationDataBaseContext context)
     {
-        _db = db;
+        _context = context;
+        _library = new LibraryService(_context);
     }
 
+    // GET: api/Books
     [HttpGet]
-    public IEnumerable<Book> Get()
+    public async Task<ActionResult<IEnumerable<Book>>> Get()
     {
-        return _db.Books;
+
+        try {
+            var result = await _library.Books.Get();
+            return result is not null ? result : NotFound();
+        }
+        catch (Exception) {
+            return BadRequest();
+        }
     }
 
-       
+    // GET: api/Books/5
     [HttpGet("{id}")]
-    public Book Get(int id)
+    public async Task<ActionResult<Book>> Get(int id)
     {
-        return _db.Books.FirstOrDefault(book => book.Id == id);
+        try {
+            var result = await _library.Books.Get(id);
+            return result is not null ? result : NotFound();
+        }
+        catch (Exception)
+        {
+            return BadRequest();
+        }
     }
 
-        
+    // POST: api/Users
     [HttpPost]
-    public void Post([FromBody] Book newBook)
+    public async Task<ActionResult<Book>> Post([FromBody] BookDto book)
     {
-        var context = new ValidationContext(newBook, serviceProvider: null, items: null);
-        var validationResults = new List<ValidationResult>();
+        try
+        {
+            Book newBook = new()
+            {
+                Author = book.Author,
+                Title = book.Title,
+                Publisher = book.Publisher,
+                Year = book.Year,
+                ISBN = book.ISBN,
+            };
 
-        bool isValid = Validator.TryValidateObject(newBook, context, validationResults, true);
-        if (!isValid) {
-            return;
+            await _library.Books.Add(newBook);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("Get", new { id = newBook.Id }, newBook);
         }
-        _db.Books.Add(newBook);
-        _db.SaveChanges();
+        catch (NullReferenceException)
+        {
+            return Problem("Entity set 'ApplicationDataBaseContext.Book' is null.");
+        }
+        catch (Exception)
+        {
+            return BadRequest();
+        }
     }
 
-        
+    // PUT: api/Users/5
     [HttpPut("{id}")]
-    public void Put(int id, [FromBody] Book updatedBook)
+    public async Task<IActionResult> Put(int id, [FromBody] BookDto book)
     {
-        var context = new ValidationContext(updatedBook, serviceProvider: null, items: null);
-        var validationResults = new List<ValidationResult>();
+        try{
+            Book updatedBook = new()
+            {
+                Author = book.Author,
+                Title = book.Title,
+                Publisher = book.Publisher,
+                Year = book.Year,
+                ISBN = book.ISBN,
+            };
 
-        bool isValid = Validator.TryValidateObject(updatedBook, context, validationResults, true);
-        if (!isValid)
-        {
-            return;
-        }
+            if (await BookExist(id))
+            {
+                await _library.Books.Edit(id, updatedBook);
+            }
+            else
+            {
+                await _library.Books.Add(updatedBook);
+            }
 
-        bool bookExist = _db.Books.Any(book => book.Id == id);
-        if (bookExist)
-        {
-            UpdateBookAt(id, updatedBook);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
-        else
+        catch (NullReferenceException)
         {
-            _db.Books.Add(updatedBook);
+            return Problem("Entity set 'ApplicationDataBaseContext.Books' is null.");
         }
-        _db.SaveChanges();
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+        catch (Exception)
+        {
+            return BadRequest();
+        }
     }
 
-    private void UpdateBookAt(int id, Book updatedBook)
-    {
-        var bookToUpdate = _db.Books.First(book => book.Id == id);
-        bookToUpdate.Author = updatedBook.Author;
-        bookToUpdate.Publisher = updatedBook.Publisher;
-        bookToUpdate.Title = updatedBook.Title;
-        bookToUpdate.Year = updatedBook.Year;
-        bookToUpdate.ISBN = updatedBook.ISBN;
-    }
-
+    // DELETE: api/Users/5
     [HttpDelete("{id}")]
-    public void Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var bookToRemove = _db.Books.FirstOrDefault(book => book.Id == id);
-        if(bookToRemove is not null)
-        {
-            _db.Remove(bookToRemove);
+        try {
+            await _library.Books.Delete(id);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
-        _db.SaveChanges();
+        catch (Exception)
+        {
+            return Problem();
+        }
+        
+    }
+
+    private async Task<bool> BookExist(int id)
+    {
+        try {
+            await _library.Books.Get(id);
+            return true;
+        }
+        catch (ArgumentNullException)
+        {
+            return false;
+        }
     }
 }
 
