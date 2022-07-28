@@ -1,4 +1,5 @@
-﻿using Library.API.Data;
+﻿using Library.API.Controllers;
+using Library.API.Data;
 using Library.API.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,12 +15,16 @@ namespace Library.API.Services
         }
         public async Task<List<User>> Get()
         {
-            return await _context.Users.Include(b => b.Books).ToListAsync();
+            var users = await _context.Users.Include(b => b.Books).ToListAsync();
+            if(users is null) throw new ElementNotFoundException();
+            return users;
         }
 
         public async Task<User> Get(int id)
         {
-            return await _context.Users.Include(b => b.Books).FirstOrDefaultAsync(book => book.Id == id);
+            var user = await _context.Users.Include(b => b.Books).FirstOrDefaultAsync(book => book.Id == id);
+            if (user is null) throw new ElementNotFoundException();
+            return user;
         }
 
         public async Task Add(User newUser)

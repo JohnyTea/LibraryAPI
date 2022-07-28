@@ -28,30 +28,14 @@ namespace Library.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> Get()
         {
-            try
-            {
-                var result = await _library.Users.Get();
-                return result is not null ? result : NotFound();
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            return await _library.Users.Get();
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> Get(int id)
         {
-            try
-            {
-                var result = await _library.Users.Get(id);
-                return result is not null ? result : NotFound();
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            return await _library.Users.Get(id);
         }
 
         // POST: api/Users
@@ -59,28 +43,15 @@ namespace Library.API.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> Post([FromBody] UserDto user)
         {
-            try
+            User newUser = new()
             {
-                User newUser = new()
-                {
-                    UserName = user.UserName,
-                    BirthDate = user.BirthDate
-                };
+                UserName = user.UserName,
+                BirthDate = user.BirthDate
+            };
 
-                await _library.Users.Add(newUser);
-                await _context.SaveChangesAsync();
-                return CreatedAtAction("GetUser", new { id = newUser.Id }, newUser);
-            }
-            catch (NullReferenceException)
-            {
-                return Problem("Entity set 'ApplicationDataBaseContext.Book' is null.");
-            }
-            catch (Exception)
-            {
-                return Problem();
-            }
-
-            
+            await _library.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetUser", new { id = newUser.Id }, newUser);
         }
 
         // PUT: api/Users/5
@@ -88,88 +59,50 @@ namespace Library.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, UserDto user)
         {
-            try
+            User updatedUser = new()
             {
-                User updatedUser = new()
-                {
-                    UserName = user.UserName,
-                    BirthDate = user.BirthDate
-                };
+                UserName = user.UserName,
+                BirthDate = user.BirthDate
+            };
 
-                if (await UserExists(id))
-                {
-                    await _library.Users.Edit(id, updatedUser);
-                }
-                else
-                {
-                    await _library.Users.Add(updatedUser);
-                }
+            if (await UserExists(id))
+            {
+                await _library.Users.Edit(id, updatedUser);
+            }
+            else
+            {
+                await _library.Users.Add(updatedUser);
+            }
 
-                await _context.SaveChangesAsync();
-                return NoContent();
-            }
-            catch (NullReferenceException)
-            {
-                return Problem("Entity set 'ApplicationDataBaseContext.Users' is null.");
-            }
-            catch (ArgumentNullException)
-            {
-                return NotFound();
-            }
-            catch (Exception)
-            {
-                return Problem();
-            }
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                await _library.Books.Delete(id);
-                await _context.SaveChangesAsync();
-                return Ok();
-            }
-            catch (Exception)
-            {
-                return Problem();
-            }
+            await _library.Books.Delete(id);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         // POST: api/Book/Borrow
         [HttpPost("BorrowBook")]
         public async Task<IActionResult> Borrow([FromBody] BorrowBookDto request) {
 
-            try
-            {
-                await _library.Borrow(request.UserID, request.BookID);
-                await _context.SaveChangesAsync();
-                return Ok();
-
-            }
-            catch (ArgumentNullException) {
-                return NotFound();
-            }
+            await _library.Borrow(request.UserID, request.BookID);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         //Delete: api/Book/Return
-        [HttpDelete("Return/{id}")]
+        [HttpDelete("Return/{bookID}")]
         public async Task<IActionResult> Return(int bookID)
         {
-
-            try
-            {
-                await _library.Return(bookID);
-                await _context.SaveChangesAsync();
-                return Ok();
-
-            }
-            catch (ArgumentNullException)
-            {
-                return NotFound();
-            }
+            await _library.Return(bookID);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         private async Task<bool> UserExists(int id)

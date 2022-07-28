@@ -19,9 +19,7 @@ public class LibraryService : ILibraryService
     public async Task Borrow(int userID, int bookID)
     {
         var book = await Books.Get(bookID);
-        var user = await Users.Get(bookID);
-
-        if (book is null || user is null) return;
+        var user = await Users.Get(userID);
 
         book.SetBorrower(user);
     }
@@ -29,8 +27,6 @@ public class LibraryService : ILibraryService
     public async Task Return(int bookID)
     {
         var book = await Books.Get(bookID);
-
-        if (book is null) return;
 
         book.RemoveBorrower();
     }

@@ -6,8 +6,8 @@ namespace Library.API.Data
     {
         [Required]
         public int UserID { get; set; }
+
         [Required]
         public int BookID { get; set; }
-
     }
 }

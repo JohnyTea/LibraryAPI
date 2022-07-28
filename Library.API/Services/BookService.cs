@@ -1,4 +1,5 @@
-﻿using Library.API.Data;
+﻿using Library.API.Controllers;
+using Library.API.Data;
 using Library.API.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,23 +16,34 @@ class BookService : IBookService
 
     public async Task<List<Book>> Get()
     {
-        return await _context.Books.Include(b => b.Borrower).ToListAsync();
+        var books = await _context.Books.Include(b => b.Borrower).ToListAsync();
+        if (books is null) {
+            throw new ElementNotFoundException();
+        }
+        return books;
     }
 
     public async Task<Book> Get(int id)
     {
-        return await _context.Books.Include(b => b.Borrower).FirstOrDefaultAsync(book => book.Id == id);
+        var book = await _context.Books.Include(b => b.Borrower).FirstOrDefaultAsync(book => book.Id == id);
+        if (book is null)
+        {
+            throw new ElementNotFoundException("Book not found");
+        }
+        return book;
     }
 
     public async Task Add(Book newBook)
-    {
+    {  
        await _context.Books.AddAsync(newBook);
     }
 
     public async Task Edit(int id, Book updatedBook)
     {
         var oldBook = await _context.Books.FirstOrDefaultAsync(book => book.Id == id);
-        if (oldBook is null) return;
+        if (oldBook is null) {
+            throw new ElementNotFoundException();
+        }
 
         oldBook.Author = updatedBook.Author;
         oldBook.Title = updatedBook.Title;

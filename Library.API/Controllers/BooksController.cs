@@ -24,113 +24,67 @@ public class BooksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Book>>> Get()
     {
-
-        try {
-            var result = await _library.Books.Get();
-            return result is not null ? result : NotFound();
-        }
-        catch (Exception) {
-            return BadRequest();
-        }
+        return await _library.Books.Get();
     }
 
     // GET: api/Books/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Book>> Get(int id)
     {
-        try {
-            var result = await _library.Books.Get(id);
-            return result is not null ? result : NotFound();
-        }
-        catch (Exception)
-        {
-            return BadRequest();
-        }
+        return await _library.Books.Get(id);
     }
 
     // POST: api/Users
     [HttpPost]
     public async Task<ActionResult<Book>> Post([FromBody] BookDto book)
     {
-        try
+        Book newBook = new()
         {
-            Book newBook = new()
-            {
-                Author = book.Author,
-                Title = book.Title,
-                Publisher = book.Publisher,
-                Year = book.Year,
-                ISBN = book.ISBN,
-            };
+            Author = book.Author,
+            Title = book.Title,
+            Publisher = book.Publisher,
+            Year = book.Year,
+            ISBN = book.ISBN,
+        };
 
-            await _library.Books.Add(newBook);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction("Get", new { id = newBook.Id }, newBook);
-        }
-        catch (NullReferenceException)
-        {
-            return Problem("Entity set 'ApplicationDataBaseContext.Book' is null.");
-        }
-        catch (Exception)
-        {
-            return BadRequest();
-        }
+        await _library.Books.Add(newBook);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction("Get", new { id = newBook.Id }, newBook);
     }
 
     // PUT: api/Users/5
     [HttpPut("{id}")]
     public async Task<IActionResult> Put(int id, [FromBody] BookDto book)
     {
-        try{
-            Book updatedBook = new()
-            {
-                Author = book.Author,
-                Title = book.Title,
-                Publisher = book.Publisher,
-                Year = book.Year,
-                ISBN = book.ISBN,
-            };
+        Book updatedBook = new()
+        {
+            Author = book.Author,
+            Title = book.Title,
+            Publisher = book.Publisher,
+            Year = book.Year,
+            ISBN = book.ISBN,
+        };
 
-            if (await BookExist(id))
-            {
-                await _library.Books.Edit(id, updatedBook);
-            }
-            else
-            {
-                await _library.Books.Add(updatedBook);
-            }
+        if (await BookExist(id))
+        {
+            await _library.Books.Edit(id, updatedBook);
+        }
+        else
+        {
+            await _library.Books.Add(updatedBook);
+        }
 
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-        catch (NullReferenceException)
-        {
-            return Problem("Entity set 'ApplicationDataBaseContext.Books' is null.");
-        }
-        catch (InvalidOperationException)
-        {
-            return NotFound();
-        }
-        catch (Exception)
-        {
-            return BadRequest();
-        }
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
     // DELETE: api/Users/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try {
-            await _library.Books.Delete(id);
-            await _context.SaveChangesAsync();
-            return Ok();
-        }
-        catch (Exception)
-        {
-            return Problem();
-        }
-        
+        await _library.Books.Delete(id);
+        await _context.SaveChangesAsync();
+        return Ok();
     }
 
     private async Task<bool> BookExist(int id)
@@ -139,7 +93,7 @@ public class BooksController : ControllerBase
             await _library.Books.Get(id);
             return true;
         }
-        catch (ArgumentNullException)
+        catch (ElementNotFoundException)
         {
             return false;
         }
