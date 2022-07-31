@@ -1,27 +1,26 @@
 ﻿using Library.API.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Library.UnitTest.Mocks
+namespace Library.UnitTest.Mocks;
+
+public class TestBase : IDisposable
 {
-    public class TestBase : IDisposable
+    protected readonly ApplicationDataBaseContext _context;
+
+    public TestBase()
     {
-        protected readonly ApplicationDataBaseContext _context;
+        var options = new DbContextOptionsBuilder<ApplicationDataBaseContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        _context = new ApplicationDataBaseContext(options);
+        _context.Database.EnsureCreated();
 
-        public TestBase()
-        {
-            var options = new DbContextOptionsBuilder<ApplicationDataBaseContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-            _context = new ApplicationDataBaseContext(options);
-            _context.Database.EnsureCreated();
+        ApplicationDataBaseInitializer.Initialize(_context);
+    }
 
-            ApplicationDataBaseInitializer.Initialize(_context);
-        }
-
-        public void Dispose()
-        {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
-        }
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
     }
 }

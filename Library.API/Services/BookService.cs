@@ -1,11 +1,9 @@
-﻿using Library.API.Controllers;
-using Library.API.Data;
-using Library.API.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Library.API.Data;
+using Library.API.Exceptions;
 
 namespace Library.API.Services;
 
-class BookService : IBookService
+public class BookService : IBookService
 {
     private readonly ApplicationDataBaseContext _context;
 
@@ -14,7 +12,7 @@ class BookService : IBookService
         _context = context;
     }
 
-    public async Task<List<Book>> Get()
+    public async Task<List<Book>> GetAllAsync()
     {
         var books = await _context.Books.Include(b => b.Borrower).ToListAsync();
         if (books is null) {
@@ -23,7 +21,7 @@ class BookService : IBookService
         return books;
     }
 
-    public async Task<Book> Get(int id)
+    public async Task<Book> GetByIdAsync(int id)
     {
         var book = await _context.Books.Include(b => b.Borrower).FirstOrDefaultAsync(book => book.Id == id);
         if (book is null)
@@ -33,12 +31,13 @@ class BookService : IBookService
         return book;
     }
 
-    public async Task Add(Book newBook)
+    public async Task AddAsync(Book newBook)
     {  
-       await _context.Books.AddAsync(newBook);
+        await _context.Books.AddAsync(newBook);
+        await _context.SaveChangesAsync();
     }
 
-    public async Task Edit(int id, Book updatedBook)
+    public async Task EditAsync(int id, Book updatedBook)
     {
         var oldBook = await _context.Books.FirstOrDefaultAsync(book => book.Id == id);
         if (oldBook is null) {
@@ -50,11 +49,14 @@ class BookService : IBookService
         oldBook.ISBN = updatedBook.ISBN;
         oldBook.Publisher = updatedBook.Publisher;
         oldBook.Year = updatedBook.Year;
+        await _context.SaveChangesAsync();
     }
 
-    public async Task Delete(int id)
+    public async Task DeleteAsync(int id)
     {
         var book = await _context.Books.FirstOrDefaultAsync(book => book.Id == id);
-        if (book is not null) _context.Books.Remove(book);
+        if (book is null) { return; }
+        _context.Books.Remove(book);
+        await _context.SaveChangesAsync();
     }
 }

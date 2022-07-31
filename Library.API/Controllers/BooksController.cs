@@ -1,20 +1,15 @@
 ﻿using Library.API.Data;
-using Library.API.Models;
-using Library.API.Services;
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-
+using Library.API.Exceptions;
 namespace Library.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class BooksController : ControllerBase
+public class BookControler : ControllerBase
 {
     private readonly ApplicationDataBaseContext _context;
     private readonly ILibraryService _library;
 
-
-    public BooksController(ApplicationDataBaseContext context)
+    public BookControler(ApplicationDataBaseContext context)
     {
         _context = context;
         _library = new LibraryService(_context);
@@ -24,14 +19,14 @@ public class BooksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Book>>> Get()
     {
-        return await _library.Books.Get();
+        return await _library.Books.GetAllAsync();
     }
 
     // GET: api/Books/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Book>> Get(int id)
     {
-        return await _library.Books.Get(id);
+        return await _library.Books.GetByIdAsync(id);
     }
 
     // POST: api/Users
@@ -47,7 +42,7 @@ public class BooksController : ControllerBase
             ISBN = book.ISBN,
         };
 
-        await _library.Books.Add(newBook);
+        await _library.Books.AddAsync(newBook);
         await _context.SaveChangesAsync();
         return CreatedAtAction("Get", new { id = newBook.Id }, newBook);
     }
@@ -65,32 +60,32 @@ public class BooksController : ControllerBase
             ISBN = book.ISBN,
         };
 
-        if (await BookExist(id))
+        if (await BookExistAsync(id))
         {
-            await _library.Books.Edit(id, updatedBook);
+            await _library.Books.EditAsync(id, updatedBook);
         }
         else
         {
-            await _library.Books.Add(updatedBook);
+            await _library.Books.AddAsync(updatedBook);
         }
 
         await _context.SaveChangesAsync();
-        return NoContent();
+        return Ok();
     }
 
     // DELETE: api/Users/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _library.Books.Delete(id);
+        await _library.Books.DeleteAsync(id);
         await _context.SaveChangesAsync();
         return Ok();
     }
 
-    private async Task<bool> BookExist(int id)
+    private async Task<bool> BookExistAsync(int id)
     {
         try {
-            await _library.Books.Get(id);
+            await _library.Books.GetByIdAsync(id);
             return true;
         }
         catch (ElementNotFoundException)

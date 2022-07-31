@@ -1,7 +1,4 @@
-﻿using Library.API.Models;
-using Microsoft.EntityFrameworkCore;
-
-namespace Library.API.Data;
+﻿namespace Library.API.Data;
 
 public class ApplicationDataBaseContext : DbContext
 {

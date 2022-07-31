@@ -18,17 +18,19 @@ public class LibraryService : ILibraryService
     }
     public async Task Borrow(int userID, int bookID)
     {
-        var book = await Books.Get(bookID);
-        var user = await Users.Get(userID);
+        var book = await Books.GetByIdAsync(bookID);
+        var user = await Users.GetByIdAsync(userID);
 
         book.SetBorrower(user);
+        await _context.SaveChangesAsync();
     }
 
     public async Task Return(int bookID)
     {
-        var book = await Books.Get(bookID);
+        var book = await Books.GetByIdAsync(bookID);
 
         book.RemoveBorrower();
+        await _context.SaveChangesAsync();
     }
 }
 
