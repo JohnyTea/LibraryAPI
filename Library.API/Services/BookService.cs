@@ -52,7 +52,7 @@ public class BookService : IBookService
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteByIdAsync(int id)
     {
         var book = await _context.Books.FirstOrDefaultAsync(book => book.Id == id);
         if (book is null) { return; }

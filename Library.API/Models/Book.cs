@@ -12,10 +12,8 @@ public class Book
     [Required]
     public string Title { get; set; }
 
-    [DefaultValue("Unknown")]
     public string? Author { get; set; }
 
-    [DefaultValue("None")]
     public string? Publisher { get; set; }
 
     public int Year { get; set; }
@@ -28,12 +26,11 @@ public class Book
     public int? BorrowerID { get; set; }
 
     [JsonIgnore]
-    public User? Borrower { get; private set; }
-
+    public User? Borrower { get; set; }
 
     public void SetBorrower(User borrower)
     {
-        if (BorrowerID is not null) throw new InvalidOperationException("Book is already borrowed by another user. Send Get for more information."); 
+        if (BorrowerID is not null) throw new InvalidOperationException("Book is already borrowed by another user."); 
 
         BorrowerID = borrower.Id;
         Borrower = borrower;
@@ -42,7 +39,7 @@ public class Book
 
     public void RemoveBorrower()
     {
-        if (BorrowerID is null || Borrower is null) return;
+        if (Borrower is null) return;
 
         Borrower.Books.Remove(this);
         BorrowerID = null;

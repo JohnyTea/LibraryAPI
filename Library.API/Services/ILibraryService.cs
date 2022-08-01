@@ -14,7 +14,7 @@
         public Task<User> GetByIdAsync(int id);
         public Task AddAsync(User newUser);
         public Task EditAsync(int id, User updatedUser);
-        public Task DeleteAsync(int id);
+        public Task DeleteByIdAsync(int id);
     }
 
     public interface IBookService
@@ -23,6 +23,6 @@
         public Task<Book> GetByIdAsync(int id);
         public Task AddAsync(Book newBook);
         public Task EditAsync(int id, Book updatedBook);
-        public Task DeleteAsync(int id);
+        public Task DeleteByIdAsync(int id);
     }
 }

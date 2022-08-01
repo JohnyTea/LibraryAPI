@@ -1,4 +1,5 @@
 ﻿using Library.API.Data;
+using Library.API.Exceptions;
 
 namespace Library.API.Controllers;
 
@@ -6,31 +7,27 @@ namespace Library.API.Controllers;
 [ApiController]
 public class UsersController : ControllerBase
 {
-    private readonly ApplicationDataBaseContext _context;
-    private readonly ILibraryService _library;
+    private readonly ApplicationDataBaseContext context;
+    private readonly ILibraryService library;
 
     public UsersController(ApplicationDataBaseContext context)
     {
-        _context = context;
-        _library = new LibraryService(_context);
+        this.context = context;
+        library = new LibraryService(this.context);
     }
 
-    // GET: api/Users
     [HttpGet]
     public async Task<ActionResult<IEnumerable<User>>> Get()
     {
-        return await _library.Users.GetAllAsync();
+        return await library.Users.GetAllAsync();
     }
 
-    // GET: api/Users/5
     [HttpGet("{id}")]
     public async Task<ActionResult<User>> Get(int id)
     {
-        return await _library.Users.GetByIdAsync(id);
+        return await library.Users.GetByIdAsync(id);
     }
 
-    // POST: api/Users
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
     public async Task<ActionResult<User>> Post([FromBody] UserDto user)
     {
@@ -40,59 +37,55 @@ public class UsersController : ControllerBase
             BirthDate = user.BirthDate
         };
 
-        await _library.Users.AddAsync(newUser);
-        await _context.SaveChangesAsync();
+        await library.Users.AddAsync(newUser);
+        await context.SaveChangesAsync();
         return CreatedAtAction("GetUser", new { id = newUser.Id }, newUser);
     }
 
-    // PUT: api/Users/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
     public async Task<IActionResult> Put(int id, UserDto user)
     {
         User updatedUser = new()
         {
+            Id = id,
             UserName = user.UserName,
             BirthDate = user.BirthDate
         };
 
         if (await UserExistsAsync(id))
         {
-            await _library.Users.EditAsync(id, updatedUser);
+            await library.Users.EditAsync(id, updatedUser);
         }
         else
         {
-            await _library.Users.AddAsync(updatedUser);
+            await library.Users.AddAsync(updatedUser);
         }
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return NoContent();
     }
 
-    // DELETE: api/Users/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _library.Books.DeleteAsync(id);
-        await _context.SaveChangesAsync();
+        await library.Books.DeleteByIdAsync(id);
+        await context.SaveChangesAsync();
         return Ok();
     }
 
-    // POST: api/Book/Borrow
     [HttpPost("BorrowBook")]
-    public async Task<IActionResult> Borrow([FromBody] BorrowBookDto request) {
+    public async Task<IActionResult> Borrow([FromBody] BorrowedBookDto request) {
 
-        await _library.Borrow(request.UserID, request.BookID);
-        await _context.SaveChangesAsync();
+        await library.Borrow(request.UserID, request.BookID);
+        await context.SaveChangesAsync();
         return Ok();
     }
 
-    //Delete: api/Book/Return
     [HttpDelete("Return/{bookID}")]
     public async Task<IActionResult> Return(int bookID)
     {
-        await _library.Return(bookID);
-        await _context.SaveChangesAsync();
+        await library.Return(bookID);
+        await context.SaveChangesAsync();
         return Ok();
     }
 
@@ -100,10 +93,10 @@ public class UsersController : ControllerBase
     {
         try
         {
-            await _library.Users.GetByIdAsync(id);
+            await library.Users.GetByIdAsync(id);
             return true;
         }
-        catch (ArgumentNullException) {
+        catch (ElementNotFoundException) {
             return false;
         }
     }

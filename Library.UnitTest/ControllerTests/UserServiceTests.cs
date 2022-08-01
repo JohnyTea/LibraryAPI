@@ -132,7 +132,7 @@ public class UserServiceTests : TestBase
         int oldUsersCount = _context.Users.Count();
         UserService service = new(_context);
 
-        await service.DeleteAsync(id);
+        await service.DeleteByIdAsync(id);
 
         int newUsersCount = _context.Users.Count();
         Assert.Equal(oldUsersCount - 1, newUsersCount);
@@ -148,7 +148,7 @@ public class UserServiceTests : TestBase
         int oldUsersCount = _context.Users.Count();
         BookService service = new(_context);
 
-        await service.DeleteAsync(id);
+        await service.DeleteByIdAsync(id);
 
         int newUsersCount = _context.Users.Count();
         Assert.Equal(oldUsersCount, newUsersCount);

@@ -150,7 +150,7 @@ public class BooksServiceTests : TestBase
         int oldBooksCount = _context.Books.Count();
         BookService service = new(_context);
 
-        await service.DeleteAsync(id);
+        await service.DeleteByIdAsync(id);
 
         int newBooksCount = _context.Books.Count();
         Assert.Equal(oldBooksCount-1, newBooksCount);
@@ -166,7 +166,7 @@ public class BooksServiceTests : TestBase
         int oldBooksCount = _context.Books.Count();
         BookService service = new(_context);
 
-        await service.DeleteAsync(id);
+        await service.DeleteByIdAsync(id);
 
         int newBooksCount = _context.Books.Count();
         Assert.Equal(oldBooksCount, newBooksCount);

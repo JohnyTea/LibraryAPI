@@ -2,7 +2,7 @@
 
 namespace Library.API.Data;
 
-public class BorrowBookDto
+public class BorrowedBookDto
 {
     [Required]
     public int UserID { get; set; }
